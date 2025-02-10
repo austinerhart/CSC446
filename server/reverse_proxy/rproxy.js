@@ -1,5 +1,7 @@
 // CREDIT TO: https://dev.to/avinash_tare/how-i-build-a-scratch-proxy-server-using-nodejs-55d9\
-const net = require("net");
+const http = require('http');
+const net = require('net');
+const url = require('url');
 
 const targetHost = process.env.HOST || '0.0.0.0';
 const targetPort = parseInt(process.env.PORT || '5000');
@@ -11,33 +13,55 @@ console.log(`Reverse proxy config:
 - Proxy Port: ${proxyPort}
 `);
 
-const server = net.createServer((clientSocket) => {
-    console.log('New client connection');
+const server = http.createServer((clientReq, clientRes) => {
+    console.log(`${new Date().toISOString()} - ${clientReq.method} ${clientReq.url}`);
     
-    const targetSocket = net.createConnection({
-        host: targetHost,
-        port: targetPort
-    }, () => {
-        console.log(`Connected to target ${targetHost}:${targetPort}`);
-        clientSocket.pipe(targetSocket);
-        targetSocket.pipe(clientSocket);
+    const options = {
+        hostname: targetHost,
+        port: targetPort,
+        path: clientReq.url,
+        method: clientReq.method,
+        headers: {
+            ...clientReq.headers,
+            host: `${targetHost}:${targetPort}`
+        }
+    };
+
+    const proxyReq = http.request(options, (proxyRes) => {
+        clientRes.writeHead(proxyRes.statusCode, proxyRes.headers);
+        
+        proxyRes.pipe(clientRes, {
+            end: true
+        });
     });
 
-    targetSocket.on('error', (err) => {
-        console.error('Error connecting to target:', err);
-        clientSocket.end();
+    proxyReq.on('error', (err) => {
+        console.error('Proxy request error:', err);
+        clientRes.writeHead(502);
+        clientRes.end('Proxy Error');
     });
 
-    clientSocket.on('error', (err) => {
-        console.error('Client socket error:', err);
-        targetSocket.end();
+    clientReq.pipe(proxyReq, {
+        end: true
+    });
+});
+
+server.on('error', (err) => {
+    console.error('Server error:', err);
+    if (err.code === 'EADDRINUSE') {
+        console.error(`Port ${proxyPort} is already in use`);
+        process.exit(1);
+    }
+});
+
+process.on('SIGTERM', () => {
+    console.log('Received SIGTERM signal. Shutting down...');
+    server.close(() => {
+        console.log('Server closed');
+        process.exit(0);
     });
 });
 
 server.listen(proxyPort, () => {
     console.log(`Reverse proxy server is listening on port ${proxyPort}`);
-});
-
-server.on('error', (err) => {
-    console.error('Server error:', err);
 });

@@ -23,7 +23,6 @@ services:
     volumes:
       - ./server/backend:/app/backend
       - ./server/frontend:/app/frontend
-      - ./server/reverse_proxy:/app/rproxy
+      - ./server/reverse_proxy:/app/reverse_proxy
     ports:
-      - "9000:5000"
       - "8001:8001"

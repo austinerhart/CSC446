@@ -2,9 +2,9 @@
     "name": "backend",
     "version": "0.0.1",
     "scripts": {
-        "start": "concurrently \"nodemon ./backend/backend.js\" \"nodemon ./rproxy/rproxy.js\"",
-        "start-backend": "nodemon ./backend/backend.js",
-        "start-proxy": "nodemon ./rproxy/rproxy.js"
+        "start": "concurrently \"npm run backend\" \"npm run proxy\"",
+        "backend": "node backend/backend.js",
+        "proxy": "node reverse_proxy/rproxy.js"
     },
     "devDependencies": {
         "nodemon": "2.0.20",
@@ -15,6 +15,8 @@
         "dotenv": "^16.4.7",
         "express": "4.18.2",
         "mysql2": "2.3.3",
-        "net": "^1.0.2"
+        "net": "^1.0.2",
+        "concurrently": "^8.0.1",
+        "cors": "^2.8.5"
     }
 }

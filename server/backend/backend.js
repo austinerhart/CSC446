@@ -2,6 +2,7 @@ const express = require("express");
 const mysql = require("mysql2");
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
+const cors = require('cors');
 const { initializeDatabase } = require("./init_database");
 
 
@@ -14,15 +15,27 @@ const PEPPER = "aae2";
 const TOTP2SECRET = "hashpartfront";
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 
-let connection = initializeDatabase();
+(async () => {
+  connection = await initializeDatabase();
+})();
 
 
 app.use("/", express.static("frontend"));
 
+app.get('/status', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
 app.get("/query", function (request, response) {
+  if (!connection) {
+    return res.status(500).json({ error: 'Database not initialized' });
+  }
+
+  console.log("Connection has been successful");
   connection.query(SQL, [true], (error, results, fields) => {
     if (error) {
       console.error(error.message);
@@ -39,6 +52,10 @@ app.post("/login", function (req, res) {
 
   if (!username || !password) {
     return res.status(400).send("Username and password are required");
+  }
+
+  if (!connection) {
+    return res.status(500).json({ error: 'Database not initialized' });
   }
 
   const SQL = "SELECT * FROM users WHERE username=?";

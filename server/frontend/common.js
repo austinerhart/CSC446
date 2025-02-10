@@ -1,9 +1,10 @@
 var parsedUrl = new URL(window.location.href);
 
+const backendUrl = 'http://localhost:8001';
 function query() {
-    fetch("http://" + parsedUrl.host + "/query", {
+    console.log("this has been hit");
+    fetch(backendUrl + "/query", {
         method: "GET",
-        mode: "no-cors",
     })
     .then((resp) => resp.text())
     .then((data) => {
