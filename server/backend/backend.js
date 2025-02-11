@@ -46,6 +46,26 @@ app.get("/query", function (request, response) {
   });
 })
 
+app.post('/registration', async (req, res) => {
+	const { username, email, password } = req.body;
+
+	try {
+		const [exisitingUser] = await connection.execute('SELECT * FROM users WHERE username=? OR email=?', [username, email]);
+		const salt = 10;
+		const passwordHash = await bcrypt.hash(password, salt);
+
+		if (exisitingUser.length > 0) {
+			return res.status(409).json({ success: false, message: "user already exists" });
+		}
+
+		const [result] = await connection.execute('INSERT INTO users (salt, username, email, password) VALUES (?,?,?)', ['0', username, email, passwordHash]);
+
+		res.status(201).json({ success: true, message: 'User registered successfully' });
+	} catch (error) {
+		res.status(500).json({ success: false, error: error.message });
+	}
+});
+
 app.post("/login", function (req, res) {
   const { username, password } = req.body;
 
