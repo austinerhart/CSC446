@@ -35,7 +35,6 @@ app.get("/query", function (request, response) {
     return res.status(500).json({ error: 'Database not initialized' });
   }
 
-  console.log("Connection has been successful");
   connection.query(SQL, [true], (error, results, fields) => {
     if (error) {
       console.error(error.message);

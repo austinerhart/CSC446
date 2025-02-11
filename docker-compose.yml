@@ -1,5 +1,27 @@
 version: '3'
+
 services:
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+    depends_on:
+      - server
+
+  server:
+    build: ./server
+    environment:
+      - HOST=0.0.0.0
+      - PORT=5000
+      - MYSQLHOST=mysql
+      - MYSQLUSER=root
+      - MYSQLPASS=example
+    volumes:
+      - ./server/backend:/app/backend
+      - ./server/frontend:/app/frontend
+
   mysql:
     image: mysql
     environment:
@@ -8,21 +30,3 @@ services:
       - ./sql:/docker-entrypoint-initdb.d/
     ports:
       - "3306:3306"
-  server:
-    build: ./server
-    restart: always
-    depends_on: 
-      - mysql
-    environment:
-      - HOST=0.0.0.0
-      - PORT=5000
-      - RP_PORT=8001
-      - MYSQLHOST=mysql
-      - MYSQLUSER=root
-      - MYSQLPASS=example
-    volumes:
-      - ./server/backend:/app/backend
-      - ./server/frontend:/app/frontend
-      - ./server/reverse_proxy:/app/reverse_proxy
-    ports:
-      - "8001:8001"
