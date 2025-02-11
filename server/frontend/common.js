@@ -40,6 +40,25 @@ async function login() {
     }
 }
 
+async function register() {
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+
+    try {
+        const response = await fetch("/registration", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password })
+        })
+            .then(res => res.json)
+            .catch(err => {
+                console.error(err);
+            });
+    } catch (error) {
+        console.log(error);
+    }
+}
+
 async function totpSubmit() {
     const tokenInput = document.getElementById("totpToken").value.trim();
 
